@@ -6,7 +6,8 @@ test:
 	$(PYTHON) -m unittest discover -s tests -p 'test_*.py' -v
 
 lint:
-	shellcheck -s sh shared/peach-qnap.sh
+	# SC2015: the port-range guard intentionally fails if either bound is false.
+	shellcheck --exclude=SC2015 -s sh shared/peach-qnap.sh
 	sh -n package_routines
 	sh -n qpkg.cfg
 
