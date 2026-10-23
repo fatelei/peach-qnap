@@ -9,7 +9,6 @@ VOLUME=peach-qnap-data
 LABEL=io.peach.qnap.owner
 QCONF=/etc/config/qpkg.conf
 GETCFG=/sbin/getcfg
-SETCFG=/sbin/setcfg
 ROOT=$($GETCFG PeachQNAP Install_Path -f "$QCONF")
 [ -d "$ROOT" ] || { echo 'PeachQNAP install directory not found.' >&2; exit 1; }
 CS=$($GETCFG container-station Install_Path -f "$QCONF")
@@ -78,7 +77,7 @@ start_container(){
         set -- "$@" --mount "type=bind,source=$media,target=/media,readonly"
     fi
     "$DOCKER" "$@" "$IMAGE" >/dev/null || fail 'Container creation failed; data volume was retained. Check port conflicts and Docker logs.'
-    "$SETCFG" PeachQNAP Web_Port "$port" -f "$QCONF"
+    "$ROOT/peach-admin-link.sh" install || echo "Peach admin page registration failed; direct port $port remains available." >&2
     # Wait for the upstream readiness check; do not report success for a crash loop.
     count=0
     while [ "$count" -lt 60 ]; do
@@ -100,6 +99,7 @@ case "${1:-}" in
     remove)
         lock; check_daemon
         if exists; then owned; stop_container; "$DOCKER" container rm "$NAME" >/dev/null; fi
+        "$ROOT/peach-admin-link.sh" remove
         echo "Kept Docker data volume $VOLUME."
         ;;
     status) check_daemon; exists && owned && "$DOCKER" container inspect --format '{{.State.Status}} {{if .State.Health}}{{.State.Health.Status}}{{end}}' "$NAME";;

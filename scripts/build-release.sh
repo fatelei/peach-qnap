@@ -29,6 +29,7 @@ cp scripts/build-release.sh scripts/release.py "$source_root/release-tools/"
 if [ "$source_commit" != "$tooling_commit" ]; then
     make -C "$source_root" test lint
 fi
+make -C "$source_root" admin
 tar --exclude=__pycache__ -czf "$out/PeachQNAP-${version}-source.tar.gz" -C "$temp" "peach-qnap-$version"
 printf '%s  %s\n' \
     730a594eacff637039947465217a7438498eddf23984898d0b998698b2a91532 \
@@ -52,10 +53,10 @@ Peach QNAP ${version}：非官方测试版 QPKG，适用于 x86-64 QNAP、QTS >=
 构建工具提交：$tooling_commit
 固定容器镜像：$(cat "$source_root/shared/image.txt")
 
-在 App Center 手动安装。包未签名，首次启动需要访问 Docker Hub；默认不挂载媒体目录。安装说明见仓库 docs/installation.zh-CN.md。
+在 App Center 手动安装。包未签名，首次启动通过 docker.1ms.run 拉取固定镜像；默认不挂载媒体目录。安装说明见仓库 docs/installation.zh-CN.md。
 
 本次自动运行了测试、ShellCheck、Linux QDK 构建以及 QPKG 包尾和源码一致性校验。
-尚未完成 NAS 实机安装、开机启动、真实媒体播放或硬件转码验证。请勿将本版本视为稳定版或 QNAP 官方认证应用。
+用户已确认旧版可在 NAS 打开 Peach；本版新增的 QTS 管理员设置页尚待实机验证，开机启动、真实媒体播放和硬件转码也未完成验证。请勿将本版本视为稳定版或 QNAP 官方认证应用。
 
 附件包括 QPKG、匹配的源码归档（含 QDK 对应源码及许可证）和 SHA256SUMS.txt。
 EOF

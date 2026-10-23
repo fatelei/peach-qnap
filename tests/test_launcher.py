@@ -55,6 +55,8 @@ class LauncherTests(unittest.TestCase):
         src = src.replace('GETCFG=/sbin/getcfg',f'GETCFG={self.p}/bin/getcfg')
         src = src.replace('SETCFG=/sbin/setcfg',f'SETCFG={self.p}/bin/setcfg')
         (self.p/'launcher').write_text(src)
+        (self.p/'peach-admin-link.sh').write_text('#!/bin/sh\nexit 0\n')
+        (self.p/'peach-admin-link.sh').chmod(0o755)
         (self.p/'image.txt').write_text('example/peach@sha256:test\n')
 
     def tearDown(self): self.tmp.cleanup()

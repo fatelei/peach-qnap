@@ -13,3 +13,5 @@ __pycache__/
 *.qpkg.md5
 *.qpkg.sha256
 *.log
+
+/shared/peach-admin.cgi

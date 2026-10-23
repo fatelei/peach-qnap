@@ -2,7 +2,7 @@
 
 将 [Peach](https://github.com/peach-mitao/peach) 包装为 QNAP App Center 可手动安装的 QPKG，通过 Container Station 运行。
 
-**非官方测试项目，尚未经过 NAS 实机验证。** 安装包版本由发布标签自动生成；固定使用 Peach `0.46.1` 镜像摘要，不自动追踪 `edge`。
+**非官方测试项目。用户已确认旧版服务可在目标 NAS 打开；新增管理员设置页仍待实机验证。** 安装包版本由发布标签自动生成；固定使用 Peach `0.46.1` 镜像摘要，不自动追踪 `edge`。
 
 ## 支持范围
 
@@ -21,8 +21,8 @@
 
 1. 从 [Releases](https://github.com/fatelei/peach-qnap/releases) 下载测试版 `.qpkg`，按附带 SHA-256 文件校验。
 2. 启动 Container Station，在 App Center 选择「手动安装」。本包未签名，可能需要允许安装无有效数字签名的应用。
-3. 等待镜像拉取完成，在 Container Station 确认 `peach-qnap` 为 `healthy`，访问 `http://NAS局域网IP:8900`。
-4. 在容器终端执行 `peach token` 取得初始口令，登录后设置密码。
+3. 等待镜像拉取完成，在 Container Station 确认 `peach-qnap` 为 `healthy`。
+4. 在同一浏览器登录 QTS 管理员账号，点击 App Center 的 Peach 图标，在管理页设置密码，再点「进入 Peach」。日常仍可直接访问 `http://NAS局域网IP:8900`。
 5. 按[安装说明](docs/installation.zh-CN.md)配置实际媒体目录；默认不挂载任何 NAS 文件夹。
 
 首次启动通过第三方代理 `docker.1ms.run` 拉取镜像，保持上游 SHA256 摘要不变；需要 NAS 能访问该代理，服务可能有访问或限流要求。默认监听所有 IPv4 接口，仅用于可信局域网；可通过 `BindAddress` 限制到 NAS 的局域网地址。
@@ -30,7 +30,7 @@
 ## 开发与构建
 
 ```sh
-make test                 # Python 3；模拟 QNAP / Docker 命令
+make test                 # Go >= 1.23 + Python 3；认证与启动测试
 make lint                 # 需要 ShellCheck
 make build                # Linux / QNAP，需安装 QNAP QDK 2.5.3
 make release TAG=v0.1.0    # Linux，从内置 QDK 源码构建完整发布附件
@@ -45,6 +45,8 @@ make release TAG=v0.1.0    # Linux，从内置 QDK 源码构建完整发布附�
 ```text
 config/                 QPKG 默认配置
 shared/                 安装到 NAS 的启动脚本、镜像锁定文件及许可证
+cmd/peach-admin/         QTS 管理员认证与密码设置 CGI
+icons/                  上游 Peach 标识及 QNAP 图标
 qpkg.cfg                QPKG 元数据和依赖要求
 package_routines        安装检查及卸载保护
 scripts/                发布构建、版本及包校验工具

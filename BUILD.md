@@ -61,3 +61,5 @@ mode and the QNAP footer checksum. This is not NAS installation validation.
 The 12 tests use fake QNAP and Docker commands. They validate launcher control
 flow, not QTS integration, Docker runtime behavior, hardware transcoding or
 media playback. See the accompanying Chinese installation and validation notes.
+
+The management CGI requires Go >= 1.23. `make admin` cross-compiles a static Linux amd64 binary (CGO disabled). Release archives include its complete source, embedded Python adapter, and the compiled binary.

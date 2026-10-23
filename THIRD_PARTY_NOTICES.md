@@ -53,3 +53,15 @@ license and corresponding-source provisions as well as third-party notices.
 
 QNAP and Peach names identify compatibility and upstream sources. No official
 endorsement or affiliation is implied.
+
+## Peach application icons
+
+- Source: https://github.com/peach-mitao/peach/blob/v0.46.1/resources/peach-logo.png
+- Original: `icons/upstream-peach.png`; resized derivatives: `icons/PeachQNAP*.png`.
+- Upstream license: AGPL-3.0-or-later, included in `LICENSES/AGPL-3.0.txt` and the installed `LICENSE.Peach`.
+- Original and derived assets are included in matching release source archives.
+- The independently written management CGI and Python adapter are MIT licensed.
+
+## Go runtime
+
+The static management CGI includes the Go standard library/runtime, distributed under its BSD-style license (`shared/LICENSE.Go`). No third-party Go modules are used.

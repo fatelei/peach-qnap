@@ -7,13 +7,15 @@
 ## 安装
 
 1. 确认 Container Station 已启动，NAS 的 8900 端口未被其他应用占用。
-2. 在 App Center 中选择「手动安装」，选择从 Releases 下载的 `PeachQNAP_0.1.0_x86_64.qpkg`。
+2. 在 App Center 中选择「手动安装」，选择从 Releases 下载的 `PeachQNAP_<版本>_x86_64.qpkg`。
 3. 本包没有 QNAP 数字签名。如果系统阻止安装，需要在 App Center 设置中允许安装无有效数字签名的应用；是否保留该选项由你决定。
 4. 首次启动会拉取固定镜像，耗时取决于网络。打开 Container Station，确认 `peach-qnap` 容器进入 `healthy` 状态。
-5. 用浏览器访问 `http://NAS局域网IP:8900`，或点击 App Center 的 Peach 图标。
-6. 在 Container Station 中打开 `peach-qnap` 的终端，执行 `peach token`，取得初始登录口令。登录后设置访问密码。
+5. 在同一浏览器登录 QTS 管理员账号，点击 App Center 的 Peach 图标，打开访问设置页。
+6. 输入两次新密码并保存，点击「进入 Peach」登录。已有密码也可由 QTS 管理员在此重置，无需 SSH。升级本身不会修改现有密码。
 
-也可在 NAS 的 SSH 终端执行以下命令取得初始口令（口令只应在你自己的终端查看）：
+管理页位于 QTS 管理端口的 `/cgi-bin/peach-qnap.cgi`，不是 8900 端口。QTS 会话过期或不是管理员时会拒绝访问。请使用与 QTS 登录一致的主机名/IP；推荐通过 QTS HTTPS 访问。若图标仍缓存旧入口，刷新 QTS 页面或重新登录。QTS 管理页注册失败时，原来的 `http://NAS局域网IP:8900` 仍可用于登录 Peach。
+
+如管理页暂时无法验证 QTS 会话，也可在 NAS 的 SSH 终端执行以下命令取得初始口令（口令只应在你自己的终端查看）：
 
 ```sh
 /etc/init.d/peach-qnap.sh token

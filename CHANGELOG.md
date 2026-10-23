@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.0 — 2026-10-23 (prerelease)
+
+- Add a QTS administrator-authenticated page to set/reset Peach passwords without SSH.
+- Point App Center at that page; preserve direct Peach access on port 8900.
+- Add upstream Peach icons in QDK standard sizes, including disabled-state artwork.
+- Check session authorization, CSRF, container ownership, and password handling.
+- Add a real upstream-container password setup/reset check to release builds.
+- NAS integration of this new CGI entry point still needs on-device confirmation.
+
 ## 1.0.2 — 2026-10-23 (prerelease)
 
 - Download the pinned Peach image through docker.1ms.run for mainland China

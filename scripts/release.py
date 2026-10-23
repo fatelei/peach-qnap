@@ -60,11 +60,14 @@ def verify_package(package, root):
     with tarfile.open(fileobj=io.BytesIO(data[start + length:]), mode="r:gz") as archive:
         expected = {"peach-qnap.conf": root / "config/peach-qnap.conf"}
         expected.update({p.name: p for p in (root / "shared").iterdir() if p.is_file()})
+        for name, icon in ((".qpkg_icon.gif", "PeachQNAP.png"), (".qpkg_icon_80.gif", "PeachQNAP_80.png"), (".qpkg_icon_gray.gif", "PeachQNAP_gray.png")):
+            expected[name] = root / "icons" / icon
         for name, source in expected.items():
             if archive.extractfile("./" + name).read() != source.read_bytes():
                 raise ValueError(f"Payload does not match source: {name}")
-        if not archive.getmember("./peach-qnap.sh").mode & 0o111:
-            raise ValueError("Launcher is not executable.")
+        for name in ("peach-qnap.sh", "peach-admin.cgi", "peach-admin-link.sh"):
+            if not archive.getmember("./" + name).mode & 0o111:
+                raise ValueError(f"Program is not executable: {name}")
 
 
 def write_checksums(directory):
