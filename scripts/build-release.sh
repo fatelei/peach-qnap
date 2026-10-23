@@ -29,7 +29,9 @@ cp scripts/build-release.sh scripts/release.py "$source_root/release-tools/"
 if [ "$source_commit" != "$tooling_commit" ]; then
     make -C "$source_root" test lint
 fi
-make -C "$source_root" admin
+if [ -f "$source_root/cmd/peach-admin/main.go" ]; then
+    make -C "$source_root" admin
+fi
 tar --exclude=__pycache__ -czf "$out/PeachQNAP-${version}-source.tar.gz" -C "$temp" "peach-qnap-$version"
 printf '%s  %s\n' \
     730a594eacff637039947465217a7438498eddf23984898d0b998698b2a91532 \
