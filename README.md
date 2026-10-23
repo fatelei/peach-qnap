@@ -25,7 +25,7 @@
 4. 在容器终端执行 `peach token` 取得初始口令，登录后设置密码。
 5. 按[安装说明](docs/installation.zh-CN.md)配置实际媒体目录；默认不挂载任何 NAS 文件夹。
 
-首次启动需要联网访问 Docker Hub。默认监听所有 IPv4 接口，仅用于可信局域网；可通过 `BindAddress` 限制到 NAS 的局域网地址。
+首次启动通过第三方代理 `docker.1ms.run` 拉取镜像，保持上游 SHA256 摘要不变；需要 NAS 能访问该代理，服务可能有访问或限流要求。默认监听所有 IPv4 接口，仅用于可信局域网；可通过 `BindAddress` 限制到 NAS 的局域网地址。
 
 ## 开发与构建
 

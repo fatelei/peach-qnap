@@ -42,7 +42,8 @@ provenance, not a general-purpose macOS port of QDK.
 - Version: 0.46.1
 - Version source: https://github.com/peach-mitao/peach/tree/v0.46.1
 - License: https://github.com/peach-mitao/peach/blob/master/LICENSE
-- Image: `longmeidao/peach:0.46.1`
+- Upstream image: `longmeidao/peach:0.46.1`
+- Download proxy: `docker.1ms.run/longmeidao/peach` (third-party mirror, same pinned digest).
 - Manifest digest: `sha256:8b949a03460a41952a3c7e5c8394145dd04a063d2759de4243c0487337fbfe16`
 
 The QPKG does not bundle Peach's executable code or container layers; the NAS

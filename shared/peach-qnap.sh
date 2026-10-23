@@ -60,7 +60,7 @@ start_container(){
     fi
     if exists; then owned; fi
     # Never pull updates on every start. image.txt pins the package image.
-    "$DOCKER" image inspect "$IMAGE" >/dev/null 2>&1 || "$DOCKER" pull "$IMAGE" || fail 'Image download failed. Check Docker Hub connectivity.'
+    "$DOCKER" image inspect "$IMAGE" >/dev/null 2>&1 || "$DOCKER" pull "$IMAGE" || fail "Image download failed. Check registry connectivity and access limits: $IMAGE"
     if "$DOCKER" volume inspect "$VOLUME" >/dev/null 2>&1; then
         [ "$("$DOCKER" volume inspect --format '{{index .Labels "io.peach.qnap.owner"}}' "$VOLUME")" = PeachQNAP ] || fail 'Data volume name is used by another application.'
     else

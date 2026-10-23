@@ -1,6 +1,12 @@
 # Changelog
 
-## Unreleased
+## 1.0.2 — 2026-10-23 (prerelease)
+
+- Download the pinned Peach image through docker.1ms.run for mainland China
+  connectivity; preserve the upstream SHA256 digest and application version.
+- Include the requested image reference in registry download errors.
+
+## Earlier packaging changes
 
 - Replace the unavailable QTS `flock` dependency with an atomic directory lock.
 - Release service locks on normal exits and handled signals; retain existing locks
