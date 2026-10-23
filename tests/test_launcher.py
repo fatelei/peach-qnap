@@ -22,7 +22,7 @@ if cmd == 'getcfg':
            'MediaPath':s.get('media',''), 'Port':s.get('port','8900'),
            'BindAddress':'0.0.0.0'}.get(field,default))
 elif cmd == 'uname': print('x86_64')
-elif cmd in ('setcfg','flock','sleep'): pass
+elif cmd in ('setcfg','sleep'): pass
 elif cmd == 'docker':
     if a[0]=='info': sys.exit(1 if s.get('offline') else 0)
     if a[:2]==['image','inspect']: sys.exit(0 if s.get('image',True) else 1)
@@ -47,7 +47,7 @@ class LauncherTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.p = Path(self.tmp.name)
         (self.p/'bin').mkdir()
-        for command in ['getcfg','setcfg','docker','uname','flock','sleep']:
+        for command in ['getcfg','setcfg','docker','uname','sleep']:
             f = self.p/'bin'/command
             f.write_text('#!'+sys.executable+'\n'+MOCK)
             f.chmod(0o755)
@@ -73,6 +73,30 @@ class LauncherTests(unittest.TestCase):
         self.assertNotIn('--privileged',run)
         self.assertTrue(any('target=/data' in x for x in run))
         self.assertFalse(any('target=/media' in x for x in run))
+
+    def test_no_flock_dependency(self):
+        self.assertNotIn('command -v flock', SOURCE.read_text())
+        self.assertNotIn('flock -n', SOURCE.read_text())
+        r, c = self.run_case()
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertFalse((self.p / '.service-lock.d').exists())
+
+    def test_existing_lock_blocks_docker_mutations(self):
+        lock = self.p / '.service-lock.d'
+        lock.mkdir()
+        (lock / 'pid').write_text('12345\n')
+        r, c = self.run_case()
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn('Service lock', r.stderr)
+        self.assertEqual((lock / 'pid').read_text(), '12345\n')
+        self.assertFalse(any(x[0] == 'docker' for x in c))
+
+    def test_failure_releases_lock(self):
+        r, c = self.run_case(offline=True)
+        self.assertNotEqual(r.returncode, 0)
+        self.assertFalse((self.p / '.service-lock.d').exists())
+        r, c = self.run_case()
+        self.assertEqual(r.returncode, 0, r.stderr)
 
     def test_foreign_container_untouched(self):
         r,c=self.run_case(container=True,owner='other')

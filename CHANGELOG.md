@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Replace the unavailable QTS `flock` dependency with an atomic directory lock.
+- Release service locks on normal exits and handled signals; retain existing locks
+  conservatively until the owner is checked after an unclean shutdown.
+
 - Derive QPKG versions from tags without requiring manual template edits.
 - Recover existing tags using current build tools and record exact source provenance.
 - Attach missing assets to existing releases without replacing published files.

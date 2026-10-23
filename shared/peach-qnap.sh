@@ -25,10 +25,16 @@ owned(){
         fail "Container name $NAME is already used by another application; nothing was changed."
 }
 lock(){
-    # flock releases its lock automatically if the service command is killed.
-    command -v flock >/dev/null 2>&1 || fail 'flock is required.'
-    exec 9>"$ROOT/.service.lock"
-    flock -n 9 || fail 'Another PeachQNAP operation is in progress.'
+    # Atomic mkdir works on QTS without the optional util-linux flock command.
+    # Do not reclaim an existing lock automatically: a slow startup may own it.
+    lock_dir="$ROOT/.service-lock.d"
+    mkdir "$lock_dir" 2>/dev/null ||
+        fail "Service lock exists or cannot be created: $lock_dir. Check its pid file and running service commands before removing a stale lock."
+    trap 'rm -f "$lock_dir/pid"; rmdir "$lock_dir"' 0
+    trap 'exit 129' HUP
+    trap 'exit 130' INT
+    trap 'exit 143' TERM
+    printf '%s\n' "$$" > "$lock_dir/pid"
 }
 check_daemon(){ "$DOCKER" info >/dev/null 2>&1 || fail 'Container Station is not running.'; }
 stop_container(){
