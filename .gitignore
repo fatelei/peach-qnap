@@ -1,0 +1,15 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.env.*
+!.env.example
+/dist/
+/build/
+/build.*/
+/tmp.*/
+*.qpkg
+*.qpkg.md5
+*.qpkg.sha256
+*.log

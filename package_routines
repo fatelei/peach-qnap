@@ -1,0 +1,16 @@
+pkg_check_requirement(){
+    [ "$(uname -m)" = "x86_64" ] || err_log "PeachQNAP requires x86_64."
+    local cs
+    cs=$(/sbin/getcfg container-station Install_Path -f /etc/config/qpkg.conf)
+    [ -x "$cs/bin/docker" ] || err_log "Container Station Docker CLI not found."
+    "$cs/bin/docker" info >/dev/null 2>&1 || err_log "Start Container Station before installing PeachQNAP."
+}
+
+pkg_post_install(){
+    chmod 600 "$SYS_QPKG_DIR/peach-qnap.conf"
+    adjust_rc_num container-station
+}
+
+# QDK's default removal ignores the service's exit code. Abort before deleting
+# launcher files if Docker is unavailable, so the user can retry cleanly.
+PKG_PRE_REMOVE='"/etc/init.d/peach-qnap.sh" remove || exit 1'
