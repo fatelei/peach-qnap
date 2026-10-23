@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.3 — 2026-10-23 (prerelease)
+
+- Allow password forms when the CGI gateway omits HTTP_ORIGIN, while still
+  requiring QTS administrator authorization and the session-bound CSRF token.
+- Reject explicit foreign/null origins and invalid/missing CSRF tokens.
+- Distinguish origin mismatches from expired/invalid form tokens in errors.
+- Browser capture confirms a correct Origin; NAS CGI omission is suspected,
+  and the compatibility fix still requires on-device validation.
+
 ## 1.1.2 — 2026-10-23 (prerelease)
 
 - Fix password form submissions rejected with “请从本页面提交密码。”

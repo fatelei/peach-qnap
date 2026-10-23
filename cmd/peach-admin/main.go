@@ -160,8 +160,11 @@ func (a app) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	message := ""
 	status := 200
 	if r.Method == "POST" {
-		if !sameOrigin(r) {
-			http.Error(w, "请从本页面提交密码。", 403)
+		// QTS CGI may omit HTTP_ORIGIN even when the browser sends Origin.
+		// A missing header falls back to the mandatory session-bound CSRF
+		// token below; an explicit foreign or null Origin is still rejected.
+		if r.Header.Get("Origin") != "" && !sameOrigin(r) {
+			http.Error(w, "请求来源与管理页地址不匹配，密码未更改。请关闭旧页面，从 App Center 重新打开。", 403)
 			return
 		}
 		r.Body = http.MaxBytesReader(w, r.Body, 8192)
@@ -170,7 +173,7 @@ func (a app) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if !hmac.Equal([]byte(r.PostForm.Get("csrf")), []byte(csrf(key))) {
-			http.Error(w, "请刷新页面后重试。", 403)
+			http.Error(w, "表单验证失效，密码未更改。请从 App Center 重新打开页面后再试。", 403)
 			return
 		}
 		password, confirmation := r.PostForm.Get("password"), r.PostForm.Get("confirmation")
