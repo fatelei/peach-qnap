@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Automatically build and publish prerelease packages for matching `vX.Y.Z` tags.
+- Add a manual build-only workflow, pinned QDK source verification, matching
+  source archives and portable SHA-256 checksums.
+- Add release-version and artifact validation tests.
+
 ## 0.1.0 — 2026-10-23 (prerelease)
 
 - Initial x86-64 QPKG launcher for Container Station.

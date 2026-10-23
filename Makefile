@@ -1,4 +1,4 @@
-.PHONY: test lint build
+.PHONY: test lint build release
 PYTHON ?= python3
 QBUILD ?= qbuild
 
@@ -10,6 +10,11 @@ lint:
 	shellcheck --exclude=SC2015 -s sh shared/peach-qnap.sh
 	sh -n package_routines
 	sh -n qpkg.cfg
+	shellcheck -s bash scripts/build-release.sh
 
 build:
 	$(QBUILD) --root "$(CURDIR)" --build-arch x86_64 --build-dir "$(CURDIR)/dist" --gzip
+
+# Requires a clean committed tree and Linux build dependencies.
+release:
+	bash scripts/build-release.sh "$(TAG)"

@@ -33,9 +33,12 @@
 make test                 # Python 3；模拟 QNAP / Docker 命令
 make lint                 # 需要 ShellCheck
 make build                # Linux / QNAP，需安装 QNAP QDK 2.5.3
+make release TAG=v0.1.0    # Linux，从内置 QDK 源码构建完整发布附件
 ```
 
 详见 [BUILD.md](BUILD.md)、[验证记录](docs/validation.zh-CN.md)和[发布流程](docs/releasing.md)。已有测试覆盖启动失败、同名资源保护和卸载保留数据等行为，不等价于 NAS 安装或媒体播放测试。
+
+推送新的 `vX.Y.Z` 标签会自动测试、构建并发布 Pre-release。标签版本必须与 `qpkg.cfg` 的 `QPKG_VER` 一致；Actions 中手动运行 `Release package` 只构建并保存产物，不发布。详见[发布流程](docs/releasing.md)。
 
 ## 项目结构
 
@@ -44,7 +47,8 @@ config/                 QPKG 默认配置
 shared/                 安装到 NAS 的启动脚本、镜像锁定文件及许可证
 qpkg.cfg                QPKG 元数据和依赖要求
 package_routines        安装检查及卸载保护
-tests/                  启动脚本的模拟测试
+scripts/                发布构建、版本及包校验工具
+tests/                  启动脚本和发布检查测试
 docs/                   安装、验证及发布文档
 LICENSES/               原包装代码及第三方许可证
 vendor/                 对应版本 QDK 源码及来源说明
