@@ -3,20 +3,39 @@
 import argparse
 import hashlib
 import io
+import json
+import os
 from pathlib import Path
 import re
 import tarfile
+import sys
 
 
-def validate_tag(tag, root):
+def validate_tag(tag):
     if not re.fullmatch(r"v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)", tag):
         raise ValueError("Use a version tag such as v0.1.1 (numeric major.minor.patch).")
     version = tag[1:]
     if len(version) > 10:
         raise ValueError("QPKG version must fit the 10-character QNAP version field.")
-    match = re.search(r'^QPKG_VER="([^"]+)"$', (root / "qpkg.cfg").read_text(), re.M)
-    if not match or match[1] != version:
-        raise ValueError(f"Update QPKG_VER in qpkg.cfg to {version} before tagging.")
+    return version
+
+
+def prepare_source(tag, root, source_commit, tooling_commit):
+    """Set the version only in the disposable source tree that will be shipped."""
+    version = validate_tag(tag)
+    config = root / "qpkg.cfg"
+    updated, count = re.subn(r'^QPKG_VER="[^"]+"$', f'QPKG_VER="{version}"', config.read_text(), flags=re.M)
+    if count != 1:
+        raise ValueError("qpkg.cfg must contain exactly one quoted QPKG_VER field.")
+    for commit in (source_commit, tooling_commit):
+        if not re.fullmatch(r"[0-9a-f]{40}", commit):
+            raise ValueError("Source and build-tool commits must be full Git SHA-1 values.")
+    config.write_text(updated)
+    (root / "RELEASE_BUILD.json").write_text(json.dumps({
+        "tag": tag, "version": version, "source_commit": source_commit,
+        "tooling_commit": tooling_commit,
+        "generated_change": "qpkg.cfg QPKG_VER is set from the release tag",
+    }, indent=2) + "\n")
     return version
 
 
@@ -59,14 +78,27 @@ def write_checksums(directory):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("operation", choices=["validate", "verify", "checksums"])
+    parser.add_argument("operation", choices=["validate", "prepare", "verify", "checksums"])
     parser.add_argument("value")
     parser.add_argument("--root", type=Path, default=Path.cwd())
+    parser.add_argument("--source-commit", default="")
+    parser.add_argument("--tooling-commit", default="")
     args = parser.parse_args()
-    if args.operation == "validate":
-        print(validate_tag(args.value, args.root))
-    elif args.operation == "verify":
-        verify_package(Path(args.value), args.root)
-        print("QPKG footer and payload verified against source.")
-    else:
-        write_checksums(Path(args.value))
+    try:
+        if args.operation == "validate":
+            print(validate_tag(args.value))
+        elif args.operation == "prepare":
+            print(prepare_source(args.value, args.root, args.source_commit, args.tooling_commit))
+        elif args.operation == "verify":
+            verify_package(Path(args.value), args.root)
+            print("QPKG footer and payload verified against source.")
+        else:
+            write_checksums(Path(args.value))
+    except (ValueError, OSError, tarfile.TarError) as error:
+        message = str(error)
+        if os.environ.get("GITHUB_ACTIONS") == "true":
+            escaped = message.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+            print(f"::error title=Release validation::{escaped}", file=sys.stderr)
+        else:
+            print(f"Release validation failed: {message}", file=sys.stderr)
+        sys.exit(1)

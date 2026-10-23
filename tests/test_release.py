@@ -1,6 +1,10 @@
 import importlib.util
 from pathlib import Path
 import tempfile
+import json
+import subprocess
+import sys
+import os
 import unittest
 
 spec = importlib.util.spec_from_file_location("release", Path(__file__).resolve().parents[1] / "scripts/release.py")
@@ -18,20 +22,46 @@ class ReleaseTests(unittest.TestCase):
         self.temp.cleanup()
 
     def test_matching_tag(self):
-        self.assertEqual(release.validate_tag("v0.1.1", self.root), "0.1.1")
+        self.assertEqual(release.validate_tag("v0.1.1"), "0.1.1")
 
-    def test_mismatched_tag(self):
-        with self.assertRaisesRegex(ValueError, "Update QPKG_VER"):
-            release.validate_tag("v0.1.2", self.root)
+    def test_tag_controls_version_without_editing_template(self):
+        self.assertEqual(release.validate_tag("v1.0.0"), "1.0.0")
+        self.assertEqual((self.root / "qpkg.cfg").read_text(), 'QPKG_VER="0.1.1"\n')
+
+    def test_prepared_source_has_tag_version_and_provenance(self):
+        release.prepare_source("v1.0.0", self.root, "a" * 40, "b" * 40)
+        self.assertEqual((self.root / "qpkg.cfg").read_text(), 'QPKG_VER="1.0.0"\n')
+        metadata = json.loads((self.root / "RELEASE_BUILD.json").read_text())
+        self.assertEqual(metadata["source_commit"], "a" * 40)
+        self.assertEqual(metadata["tooling_commit"], "b" * 40)
+
+    def test_ambiguous_config_not_modified(self):
+        original = 'QPKG_VER="0.1.0"\nQPKG_VER="0.2.0"\n'
+        (self.root / "qpkg.cfg").write_text(original)
+        with self.assertRaisesRegex(ValueError, "exactly one"):
+            release.prepare_source("v1.0.0", self.root, "a" * 40, "b" * 40)
+        self.assertEqual((self.root / "qpkg.cfg").read_text(), original)
+
+    def test_invalid_commit_not_written(self):
+        with self.assertRaisesRegex(ValueError, "full Git"):
+            release.prepare_source("v1.0.0", self.root, "main", "b" * 40)
+        self.assertEqual((self.root / "qpkg.cfg").read_text(), 'QPKG_VER="0.1.1"\n')
+
+    def test_github_error_annotation(self):
+        result = subprocess.run([sys.executable, str(Path(release.__file__)), "validate", "bad"],
+                                capture_output=True, text=True, env={**os.environ, "GITHUB_ACTIONS": "true"})
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("::error title=Release validation::", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
 
     def test_invalid_tags(self):
         for tag in ("main", "0.1.1", "v01.1.1", "v0.1.1-rc1", "v0.1.1\n", "v0.1.1;echo bad"):
             with self.subTest(tag=tag), self.assertRaises(ValueError):
-                release.validate_tag(tag, self.root)
+                release.validate_tag(tag)
 
     def test_qnap_version_field_limit(self):
         with self.assertRaisesRegex(ValueError, "10-character"):
-            release.validate_tag("v1234.1234.1234", self.root)
+            release.validate_tag("v1234.1234.1234")
 
     def test_invalid_package_rejected(self):
         path = self.root / "test.qpkg"

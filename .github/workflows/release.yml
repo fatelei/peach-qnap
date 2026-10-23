@@ -6,13 +6,18 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Version to build (must match qpkg.cfg); manual runs never publish'
+        description: 'Version tag, e.g. v1.0.0; the package version is generated from this'
         required: true
         default: v0.1.0
         type: string
+      publish:
+        description: 'Publish assets for an existing tag (uses that tag source; never moves it)'
+        required: true
+        default: false
+        type: boolean
 
 concurrency:
-  group: release-${{ github.event_name }}-${{ github.ref }}
+  group: release-${{ github.event_name == 'push' && github.ref_name || inputs.tag }}
   cancel-in-progress: false
 
 permissions:
@@ -26,21 +31,32 @@ jobs:
       contents: write
     env:
       RELEASE_TAG: ${{ github.event_name == 'push' && github.ref_name || inputs.tag }}
+      PUBLISH_RELEASE: ${{ github.event_name == 'push' || inputs.publish }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
+          fetch-depth: 0
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: '3.12'
       - name: Validate version
-        run: python3 scripts/release.py validate "$RELEASE_TAG"
+        run: |
+          echo "Release tag: $RELEASE_TAG"
+          echo "Builder commit: $GITHUB_SHA"
+          python3 scripts/release.py validate "$RELEASE_TAG"
       - name: Install build dependencies
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y build-essential rsync shellcheck
       - name: Test and lint
         run: make test lint
       - name: Build and verify QPKG
-        run: bash scripts/build-release.sh "$RELEASE_TAG"
+        shell: bash
+        run: |
+          source_ref="$GITHUB_SHA"
+          if [ "$PUBLISH_RELEASE" = true ]; then
+            source_ref="refs/tags/$RELEASE_TAG"
+          fi
+          bash scripts/build-release.sh "$RELEASE_TAG" "$source_ref"
       - name: Keep build artifacts (also available for manual test runs)
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
@@ -48,8 +64,8 @@ jobs:
           path: dist/${{ env.RELEASE_TAG }}/
           if-no-files-found: error
           retention-days: 14
-      - name: Publish prerelease for a pushed tag
-        if: github.event_name == 'push'
+      - name: Publish release assets
+        if: env.PUBLISH_RELEASE == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -57,14 +73,24 @@ jobs:
         run: |
           set -euo pipefail
           out="dist/$RELEASE_TAG"
-          if draft=$(gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft' 2>/dev/null); then
-            if [ "$draft" != true ]; then
-              echo 'A published release already exists; refusing to overwrite its assets.' >&2
-              exit 1
-            fi
+          if draft=$(gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft'); then
+            echo "Using existing release (draft=$draft)."
           else
             gh release create "$RELEASE_TAG" --verify-tag --draft --prerelease \
               --title "Peach QNAP $RELEASE_TAG — 测试版" --notes-file "$out/RELEASE_NOTES.md"
+            draft=true
           fi
-          gh release upload "$RELEASE_TAG" "$out"/*.qpkg "$out"/*-source.tar.gz "$out/SHA256SUMS.txt" --clobber
-          gh release edit "$RELEASE_TAG" --draft=false --prerelease
+          if [ "$draft" = true ]; then
+            gh release upload "$RELEASE_TAG" "$out"/*.qpkg "$out"/*-source.tar.gz "$out/SHA256SUMS.txt" --clobber
+            gh release edit "$RELEASE_TAG" --draft=false --prerelease
+          else
+            # Support releases created in the GitHub UI, without replacing any asset.
+            existing=$(gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name')
+            for asset in "$out"/*.qpkg "$out"/*-source.tar.gz "$out/SHA256SUMS.txt"; do
+              if grep -Fxq "${asset##*/}" <<< "$existing"; then
+                echo "::error::Release asset already exists: ${asset##*/}. Nothing will be overwritten."
+                exit 1
+              fi
+            done
+            gh release upload "$RELEASE_TAG" "$out"/*.qpkg "$out"/*-source.tar.gz "$out/SHA256SUMS.txt"
+          fi

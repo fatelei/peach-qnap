@@ -2,7 +2,7 @@
 
 将 [Peach](https://github.com/peach-mitao/peach) 包装为 QNAP App Center 可手动安装的 QPKG，通过 Container Station 运行。
 
-**非官方测试项目，尚未经过 NAS 实机验证。** 当前版本为包装器 `0.1.0`，固定使用 Peach `0.46.1` 镜像摘要，不自动追踪 `edge`。
+**非官方测试项目，尚未经过 NAS 实机验证。** 安装包版本由发布标签自动生成；固定使用 Peach `0.46.1` 镜像摘要，不自动追踪 `edge`。
 
 ## 支持范围
 
@@ -38,7 +38,7 @@ make release TAG=v0.1.0    # Linux，从内置 QDK 源码构建完整发布附�
 
 详见 [BUILD.md](BUILD.md)、[验证记录](docs/validation.zh-CN.md)和[发布流程](docs/releasing.md)。已有测试覆盖启动失败、同名资源保护和卸载保留数据等行为，不等价于 NAS 安装或媒体播放测试。
 
-推送新的 `vX.Y.Z` 标签会自动测试、构建并发布 Pre-release。标签版本必须与 `qpkg.cfg` 的 `QPKG_VER` 一致；Actions 中手动运行 `Release package` 只构建并保存产物，不发布。详见[发布流程](docs/releasing.md)。
+推送新的 `vX.Y.Z` 标签会自动测试、构建并发布 Pre-release。无需手动同步 `qpkg.cfg` 的版本；Actions 中手动运行 `Release package` 默认只构建，勾选 `publish` 可为已有标签补发附件，且不移动标签。详见[发布流程](docs/releasing.md)。
 
 ## 项目结构
 
