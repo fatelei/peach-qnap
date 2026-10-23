@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.1 — 2026-10-23 (prerelease)
+
+- Do not abort installation if the optional QTS admin page cannot register.
+- Preserve a direct Peach App Center entry when registration fails and record
+  the detailed error in an owner-only admin-page.log.
+- Read the QTS HTTPS management port from Stunnel/Port.
+- Resolve the delivered script directory directly and tolerate QTS getcfg
+  returning nonzero for defaulted/missing port settings.
+- Exact cause of the reported NAS registration failure still requires its log.
+
 ## 1.1.0 — 2026-10-23 (prerelease)
 
 - Add a QTS administrator-authenticated page to set/reset Peach passwords without SSH.

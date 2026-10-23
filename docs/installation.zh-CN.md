@@ -79,3 +79,5 @@ APP_DIR=$(/sbin/getcfg PeachQNAP Install_Path -f /etc/config/qpkg.conf)
 - 固定摘要：`sha256:8b949a03460a41952a3c7e5c8394145dd04a063d2759de4243c0487337fbfe16`
 - [QNAP QDK](https://github.com/qnap-dev/QDK)，构建使用 2.5.3，提交 `b7b5f4c86ebe95b10a62d64725515e7cdcf4bb35`
 - 包装脚本源码位于 [仓库根目录](../)。脚本为 MIT；Peach 镜像由上游提供，适用 AGPL-3.0-or-later。QDK 安装框架适用其 GPL 许可证。
+
+管理页注册异常不会再中断整个 QPKG 安装；App Center 将回退到 Peach 本身的入口。详细注册错误保存在安装目录下的 `admin-page.log`（仅文件所有者可读写），可用于定位 CGI 路径或端口设置问题。

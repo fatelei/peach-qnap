@@ -8,7 +8,7 @@ pkg_check_requirement(){
 
 pkg_post_install(){
     chmod 600 "$SYS_QPKG_DIR/peach-qnap.conf"
-    "$SYS_QPKG_DIR/peach-admin-link.sh" install || err_log "Could not register Peach admin page."
+    "$SYS_QPKG_DIR/peach-admin-link.sh" register || warn_log "Peach admin page unavailable; direct Peach access is retained. Details: $SYS_QPKG_DIR/admin-page.log"
     adjust_rc_num container-station
 }
 

@@ -77,7 +77,7 @@ start_container(){
         set -- "$@" --mount "type=bind,source=$media,target=/media,readonly"
     fi
     "$DOCKER" "$@" "$IMAGE" >/dev/null || fail 'Container creation failed; data volume was retained. Check port conflicts and Docker logs.'
-    "$ROOT/peach-admin-link.sh" install || echo "Peach admin page registration failed; direct port $port remains available." >&2
+    "$ROOT/peach-admin-link.sh" register || echo "Peach admin page registration failed; direct port $port remains available." >&2
     # Wait for the upstream readiness check; do not report success for a crash loop.
     count=0
     while [ "$count" -lt 60 ]; do

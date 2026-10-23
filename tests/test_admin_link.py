@@ -24,6 +24,7 @@ class AdminLinkTests(unittest.TestCase):
         src = SOURCE.read_text().replace('GETCFG=/sbin/getcfg', 'GETCFG='+str(getter)).replace('SETCFG=/sbin/setcfg', 'SETCFG='+str(setter)).replace('LINK=/home/httpd/cgi-bin/peach-qnap.cgi', 'LINK='+str(self.link))
         self.script = self.root / 'link.sh'
         self.script.write_text(src)
+        self.script.chmod(0o755)
 
     def run_link(self, action):
         return subprocess.run(['sh',str(self.script),action], capture_output=True, text=True)
@@ -49,3 +50,35 @@ class AdminLinkTests(unittest.TestCase):
         self.assertNotEqual(self.run_link('install').returncode,0)
         self.run_link('remove')
         self.assertEqual(self.link.read_text(),'owned by another app')
+
+    def test_missing_setting_nonzero_with_default(self):
+        getter = self.root / 'getcfg'
+        getter.write_text('#!/bin/sh\necho 8080\nexit 1\n')
+        self.assertEqual(self.run_link('install').returncode, 0)
+        self.assertIn('Web_Port 8080', (self.root / 'settings').read_text())
+
+    def test_missing_settings_without_output_use_defaults(self):
+        (self.root / 'getcfg').write_text('#!/bin/sh\nexit 1\n')
+        self.assertEqual(self.run_link('install').returncode, 0)
+        settings = (self.root / 'settings').read_text()
+        self.assertIn('Web_Port 8080', settings)
+        self.assertIn('Web_SSL_Port 443', settings)
+
+    def test_registration_failure_preserves_direct_entry_and_diagnostic(self):
+        self.target.unlink()
+        result = self.run_link('register')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('missing or not executable', (self.root / 'admin-page.log').read_text())
+        self.assertEqual((self.root / 'admin-page.log').stat().st_mode & 0o077, 0)
+        settings = (self.root / 'settings').read_text()
+        self.assertIn('WebUI / -f', settings)
+        self.assertIn('Web_Port 5000', settings)
+
+    def test_registration_success_retains_admin_entry(self):
+        self.assertEqual(self.run_link('register').returncode, 0)
+        self.assertIn('WebUI /cgi-bin/peach-qnap.cgi', (self.root / 'settings').read_text())
+
+    def test_qts_https_port_comes_from_stunnel(self):
+        (self.root / 'getcfg').write_text('#!/bin/sh\nif [ "$1" = Stunnel ] && [ "$2" = Port ]; then echo 7443; else echo 5000; fi\n')
+        self.assertEqual(self.run_link('install').returncode, 0)
+        self.assertIn('Web_SSL_Port 7443', (self.root / 'settings').read_text())

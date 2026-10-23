@@ -84,7 +84,7 @@ func authorizeQTS(r *http.Request) (string, error) {
 		return "", err
 	}
 	httpPort := setting("System", "Web Access Port", "8080", "/etc/config/uLinux.conf")
-	httpsPort := setting("System", "SSL Port", "443", "/etc/config/uLinux.conf")
+	httpsPort := setting("Stunnel", "Port", "443", "/etc/config/uLinux.conf")
 	client := qtsClient()
 	for _, endpoint := range []struct{ scheme, port string }{{"https", httpsPort}, {"http", httpPort}} {
 		if !validPort(endpoint.port) {
