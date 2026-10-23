@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.2 — 2026-10-23 (prerelease)
+
+- Fix password form submissions rejected with “请从本页面提交密码。”
+- Use same-origin Referrer-Policy: Chrome sends Origin: null for form POSTs
+  under the previous no-referrer policy. Reproduced with a real browser.
+- Preserve strict Origin, administrator-session, and CSRF validation; null
+  or missing origins remain rejected.
+
 ## 1.1.1 — 2026-10-23 (prerelease)
 
 - Do not abort installation if the optional QTS admin page cannot register.

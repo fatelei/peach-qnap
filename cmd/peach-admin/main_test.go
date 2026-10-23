@@ -20,6 +20,7 @@ func TestPasswordBoundary(t *testing.T) {
 		{"valid", "session", "http://nas:5000", csrf("session"), "Test-secret-7821", "Test-secret-7821", false, 200, 1},
 		{"unauthenticated", "", "http://nas:5000", "", "Test-secret-7821", "Test-secret-7821", true, 403, 0},
 		{"other origin", "session", "http://evil.example", csrf("session"), "Test-secret-7821", "Test-secret-7821", false, 403, 0},
+		{"null origin", "session", "null", csrf("session"), "Test-secret-7821", "Test-secret-7821", false, 403, 0},
 		{"no origin", "session", "", csrf("session"), "Test-secret-7821", "Test-secret-7821", false, 403, 0},
 		{"wrong csrf", "session", "http://nas:5000", csrf("other-session"), "Test-secret-7821", "Test-secret-7821", false, 403, 0},
 		{"short", "session", "http://nas:5000", csrf("session"), "short", "short", false, 400, 0},
@@ -63,6 +64,9 @@ func TestPageDoesNotWriteOrExposeSession(t *testing.T) {
 	a.ServeHTTP(w, httptest.NewRequest("GET", "http://nas:5000"+adminPath, nil))
 	if w.Code != 200 || strings.Contains(w.Body.String(), "private-session-value") {
 		t.Fatal(w.Body.String())
+	}
+	if got := w.Header().Get("Referrer-Policy"); got != "same-origin" {
+		t.Fatalf("form policy %q turns browser POST Origin into null; want same-origin", got)
 	}
 	if !strings.Contains(w.Body.String(), "http://nas:8900/") {
 		t.Fatal("missing Peach link")

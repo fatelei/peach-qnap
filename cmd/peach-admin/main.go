@@ -142,7 +142,9 @@ var page = template.Must(template.New("page").Parse(`<!doctype html><html lang="
 
 func (a app) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
-	w.Header().Set("Referrer-Policy", "no-referrer")
+	// no-referrer makes browser form POSTs carry Origin: null. Keep the
+	// same-origin form compatible with strict Origin checks.
+	w.Header().Set("Referrer-Policy", "same-origin")
 	w.Header().Set("X-Frame-Options", "DENY")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'")
