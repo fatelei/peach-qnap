@@ -13,9 +13,10 @@ case "${1:-}" in
     install)
         [ -x "$TARGET" ] || { echo 'Peach admin CGI is missing.' >&2; exit 1; }
         if [ -e "$LINK" ] || [ -L "$LINK" ]; then
-            [ -L "$LINK" ] && [ "$(readlink "$LINK")" = "$TARGET" ] || {
-                echo 'Peach admin CGI path is occupied; not overwriting it.' >&2; exit 1;
-            }
+            if [ ! -L "$LINK" ] || [ "$(readlink "$LINK")" != "$TARGET" ]; then
+                echo 'Peach admin CGI path is occupied; not overwriting it.' >&2
+                exit 1
+            fi
         else
             ln -s "$TARGET" "$LINK"
         fi
